@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="assets/logo.png" alt="Vapor Logo" width="180" style="border-radius: 36px; box-shadow: 0 8px 32px rgba(0,0,0,0.4);" />
+
 # 🎮 Vapor
 ### Zero-Limit Windows Gaming Engine for macOS (Apple Silicon)
 
