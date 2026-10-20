@@ -29,16 +29,47 @@ class VaporRunner: ObservableObject {
     let configFile: URL
 
     init() {
-        let home = FileManager.default.homeDirectoryForCurrentUser
-        let vaporPath = home.appendingPathComponent(".gemini/antigravity/scratch/vapor")
-        self.rootDir = vaporPath
-        self.engineDir = vaporPath.appendingPathComponent("engines/default")
-        self.defaultBottleDir = vaporPath.appendingPathComponent("bottles/Steam")
+        self.rootDir = VaporRunner.findVaporRoot()
+        self.engineDir = rootDir.appendingPathComponent("engines/default")
+        self.defaultBottleDir = rootDir.appendingPathComponent("bottles/Steam")
         self.steamExe = defaultBottleDir.appendingPathComponent("drive_c/Program Files (x86)/Steam/steam.exe")
         self.cs2Exe = defaultBottleDir.appendingPathComponent("drive_c/Program Files (x86)/Steam/steamapps/common/Counter-Strike Global Offensive/game/bin/win64/cs2.exe")
-        self.configFile = vaporPath.appendingPathComponent("config.env")
+        self.configFile = rootDir.appendingPathComponent("config.env")
 
         refreshStatus()
+    }
+
+    static func findVaporRoot() -> URL {
+        let fm = FileManager.default
+        let home = fm.homeDirectoryForCurrentUser
+
+        // 1. Check if running inside bundled Vapor.app/Contents/Resources/vapor
+        let bundleResource = Bundle.main.bundleURL.appendingPathComponent("Contents/Resources/vapor")
+        if fm.fileExists(atPath: bundleResource.appendingPathComponent("bin/vapor").path) {
+            return bundleResource
+        }
+
+        // 2. Check ~/.vapor (Standard universal install directory)
+        let dotVapor = home.appendingPathComponent(".vapor")
+        if fm.fileExists(atPath: dotVapor.appendingPathComponent("bin/vapor").path) {
+            return dotVapor
+        }
+
+        // 3. Check ~/.gemini/antigravity/scratch/vapor (Development directory)
+        let scratchVapor = home.appendingPathComponent(".gemini/antigravity/scratch/vapor")
+        if fm.fileExists(atPath: scratchVapor.appendingPathComponent("bin/vapor").path) {
+            return scratchVapor
+        }
+
+        // 4. Check relative to binary location
+        let binPath = URL(fileURLWithPath: CommandLine.arguments[0])
+        let candidateDir = binPath.deletingLastPathComponent().deletingLastPathComponent()
+        if fm.fileExists(atPath: candidateDir.appendingPathComponent("bin/vapor").path) {
+            return candidateDir
+        }
+
+        // Fallback to ~/.vapor
+        return dotVapor
     }
 
     func refreshStatus() {

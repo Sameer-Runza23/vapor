@@ -15,6 +15,8 @@ function show_help() {
 Usage: vapor <command> [arguments]
 
 Commands:
+  setup                  Download and initialize Wine-CX + Apple D3DMetal engine
+  install-steam [bottle] Download & install Windows Steam into bottle
   steam [bottle]         Launch Windows Steam with Apple Metal 3 acceleration
   cs2                    Launch Counter-Strike 2 directly
   run <file.exe> [btl]   Run ANY Windows .exe (ExLoader, games, tools)
@@ -40,6 +42,12 @@ CMD="${1:-help}"
 shift 2>/dev/null || true
 
 case "$CMD" in
+    setup)
+        exec "$ROOT_DIR/scripts/setup_engine.sh" "$@"
+        ;;
+    install-steam)
+        exec "$ROOT_DIR/scripts/install_steam.sh" "$@"
+        ;;
     steam)
         exec "$ROOT_DIR/scripts/launch_steam.sh" "$@"
         ;;

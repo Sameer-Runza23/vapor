@@ -10,5 +10,6 @@ config.env
 gui/Vapor
 Vapor.app/
 
-# macOS system files
+# macOS system files and build artifacts
 .DS_Store
+*.dmg
