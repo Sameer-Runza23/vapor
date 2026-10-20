@@ -1,0 +1,15 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CURRENT_USER\Software\Wine\DirectInput]
+"MouseWarpOverride"="force"
+"MouseDataFormat"="0"
+
+[HKEY_CURRENT_USER\Software\Wine\Mac Driver]
+"WindowsRelativeMouseMode"="Y"
+"UseTakeFocus"="N"
+
+[HKEY_CURRENT_USER\Software\Wine\Direct3D]
+"csmt"=dword:00000001
+"Multisampling"="enabled"
+"StrictDrawOrdering"="disabled"
+"OffscreenRenderingMode"="fbo"

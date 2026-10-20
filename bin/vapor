@@ -1,0 +1,122 @@
+#!/usr/bin/env bash
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+CONFIG_FILE="$ROOT_DIR/config.env"
+ENGINE_DIR="$ROOT_DIR/engines/default"
+
+[ ! -f "$CONFIG_FILE" ] && touch "$CONFIG_FILE"
+source "$CONFIG_FILE" 2>/dev/null || true
+
+function show_help() {
+    cat << EOF
+🎮 Vapor - 100% Free & Standalone Windows Gaming Engine for macOS (Apple Silicon)
+Usage: vapor <command> [arguments]
+
+Commands:
+  steam [bottle]         Launch Windows Steam with Apple Metal 3 acceleration
+  cs2                    Launch Counter-Strike 2 directly
+  run <file.exe> [btl]   Run ANY Windows .exe (ExLoader, games, tools)
+  hud <on|off|status>    Toggle Apple Metal Performance HUD (FPS, GPU ms, VRAM)
+  bottles                List all gaming bottles
+  winecfg [bottle]       Open Wine Configuration GUI
+  taskmgr [bottle]       Open Windows Task Manager
+  regedit [bottle]       Open Windows Registry Editor
+  kill [bottle]          Terminate all active Wine processes in bottle
+  gui                    Launch the native macOS graphical Vapor app
+  help                   Show this help message
+
+Examples:
+  vapor steam
+  vapor cs2
+  vapor run ~/Downloads/ExLoader.exe
+  vapor hud on
+  vapor winecfg
+EOF
+}
+
+CMD="${1:-help}"
+shift 2>/dev/null || true
+
+case "$CMD" in
+    steam)
+        exec "$ROOT_DIR/scripts/launch_steam.sh" "$@"
+        ;;
+    cs2)
+        exec "$ROOT_DIR/scripts/launch_cs2.sh" "$@"
+        ;;
+    run)
+        exec "$ROOT_DIR/scripts/run_exe.sh" "$@"
+        ;;
+    hud)
+        ACTION="${1:-status}"
+        if [ "$ACTION" = "on" ]; then
+            echo "HUD_ENABLED=1" > "$CONFIG_FILE"
+            echo "✓ Apple Metal Performance HUD is now ENABLED (FPS and GPU overlay will show in games)."
+        elif [ "$ACTION" = "off" ]; then
+            echo "HUD_ENABLED=0" > "$CONFIG_FILE"
+            echo "✓ Apple Metal Performance HUD is now DISABLED."
+        else
+            CURRENT="$(grep "HUD_ENABLED" "$CONFIG_FILE" | cut -d'=' -f2)"
+            if [ "$CURRENT" = "1" ]; then
+                echo "Metal HUD status: ENABLED"
+            else
+                echo "Metal HUD status: DISABLED"
+            fi
+        fi
+        ;;
+    bottles)
+        echo "Created Bottles in $ROOT_DIR/bottles:"
+        if [ -d "$ROOT_DIR/bottles" ]; then
+            ls -1 "$ROOT_DIR/bottles"
+        else
+            echo "  (No bottles created yet)"
+        fi
+        ;;
+    winecfg|taskmgr|regedit)
+        BOTTLE_NAME="${1:-Steam}"
+        BOTTLE_DIR="$ROOT_DIR/bottles/$BOTTLE_NAME"
+        export WINEPREFIX="$BOTTLE_DIR"
+        export WINEARCH="win64"
+        export WINEDEBUG="-all"
+        export WINEMSYNC=1
+        export WINESERVER="$ENGINE_DIR/bin/wineserver"
+        export WINELOADER="$ENGINE_DIR/bin/wineloader"
+        export DYLD_FALLBACK_LIBRARY_PATH="$ENGINE_DIR/lib64:$ENGINE_DIR/lib:$ENGINE_DIR/lib/external:/usr/lib"
+        export PATH="$ENGINE_DIR/bin:$PATH"
+        exec "$ENGINE_DIR/bin/wineloader" "$CMD"
+        ;;
+    kill)
+        BOTTLE_NAME="${1:-Steam}"
+        BOTTLE_DIR="$ROOT_DIR/bottles/$BOTTLE_NAME"
+        WINESERVER_BIN="$ENGINE_DIR/bin/wineserver"
+        if [ -f "$WINESERVER_BIN" ]; then
+            export WINEPREFIX="$BOTTLE_DIR"
+            export DYLD_FALLBACK_LIBRARY_PATH="$ENGINE_DIR/lib64:$ENGINE_DIR/lib:$ENGINE_DIR/lib/external:/usr/lib"
+            "$WINESERVER_BIN" -k
+            echo "✓ Wine processes in bottle '$BOTTLE_NAME' killed."
+        else
+            pkill -9 -f wineloader 2>/dev/null || true
+            pkill -9 -f wineserver 2>/dev/null || true
+            echo "✓ Processes killed via pkill."
+        fi
+        ;;
+    gui)
+        if [ -x "$ROOT_DIR/gui/Vapor" ]; then
+            exec "$ROOT_DIR/gui/Vapor"
+        else
+            echo "Compiling native Vapor GUI..."
+            swiftc -parse-as-library -O "$ROOT_DIR/gui/VaporApp.swift" -o "$ROOT_DIR/gui/Vapor"
+            exec "$ROOT_DIR/gui/Vapor"
+        fi
+        ;;
+    help|--help|-h)
+        show_help
+        ;;
+    *)
+        echo "Unknown command: $CMD"
+        show_help
+        exit 1
+        ;;
+esac

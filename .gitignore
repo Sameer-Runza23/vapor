@@ -1,0 +1,14 @@
+# Bottles and downloaded runtime engines (heavy/user-specific binaries)
+bottles/
+engines/
+
+# Local configuration and runtime logs
+config.env
+*.log
+
+# Compiled GUI binary (source in gui/VaporApp.swift is preserved)
+gui/Vapor
+Vapor.app/
+
+# macOS system files
+.DS_Store

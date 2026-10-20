@@ -1,0 +1,6 @@
+Windows Registry Editor Version 5.00
+
+[-HKEY_CURRENT_USER\Software\Wine\Direct3D]
+
+[HKEY_CURRENT_USER\Software\Wine\Direct3D]
+"cb_access_map_w"=dword:00000001
