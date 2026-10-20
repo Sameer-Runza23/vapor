@@ -3,14 +3,22 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-ENGINE_DIR="$ROOT_DIR/engines/default"
-CONFIG_FILE="$ROOT_DIR/config.env"
+
+if [ -w "$ROOT_DIR" ] && [ ! -d "$ROOT_DIR/../../MacOS" ] && [ -d "$ROOT_DIR/engines" ]; then
+    VAPOR_DATA_DIR="${VAPOR_DATA_DIR:-$ROOT_DIR}"
+else
+    VAPOR_DATA_DIR="${VAPOR_DATA_DIR:-$HOME/Library/Application Support/Vapor}"
+fi
+mkdir -p "$VAPOR_DATA_DIR/engines" "$VAPOR_DATA_DIR/bottles"
+
+ENGINE_DIR="$VAPOR_DATA_DIR/engines/default"
+CONFIG_FILE="$VAPOR_DATA_DIR/config.env"
 
 [ -f "$CONFIG_FILE" ] && source "$CONFIG_FILE"
 
 EXE_PATH="$1"
 BOTTLE_NAME="${2:-Steam}"
-BOTTLE_DIR="$ROOT_DIR/bottles/$BOTTLE_NAME"
+BOTTLE_DIR="$VAPOR_DATA_DIR/bottles/$BOTTLE_NAME"
 
 if [ -z "$EXE_PATH" ]; then
     echo "Usage: vapor run <path/to/app.exe> [bottle_name] [args...]"

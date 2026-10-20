@@ -3,10 +3,20 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-BIN_DIR="$ROOT_DIR/bin"
-ENGINES_DIR="$ROOT_DIR/engines"
+
+if [ -w "$ROOT_DIR" ] && [ ! -d "$ROOT_DIR/../../MacOS" ] && [ -d "$ROOT_DIR/engines" ]; then
+    VAPOR_DATA_DIR="${VAPOR_DATA_DIR:-$ROOT_DIR}"
+else
+    VAPOR_DATA_DIR="${VAPOR_DATA_DIR:-$HOME/Library/Application Support/Vapor}"
+fi
+
+BIN_DIR="$VAPOR_DATA_DIR/bin"
+ENGINES_DIR="$VAPOR_DATA_DIR/engines"
 DEFAULT_ENGINE_DIR="$ENGINES_DIR/default"
 SEVEN_ZIP="$BIN_DIR/7zz"
+
+# Also check bundled 7zz if available
+[ -f "$ROOT_DIR/bin/7zz" ] && SEVEN_ZIP="$ROOT_DIR/bin/7zz"
 
 ENGINE_URL="https://github.com/The-Wineskin-Project/Engines/releases/download/v1.0/WS12WineCX64Bit23.7.1-4_D3DMetal-v2.1.tar.7z"
 ENGINE_ARCHIVE="$ENGINES_DIR/engine.tar.7z"

@@ -22,6 +22,7 @@ class VaporRunner: ObservableObject {
     @Published var statusLog: String = "Ready.\n"
 
     let rootDir: URL
+    let dataDir: URL
     let engineDir: URL
     let defaultBottleDir: URL
     let steamExe: URL
@@ -30,13 +31,27 @@ class VaporRunner: ObservableObject {
 
     init() {
         self.rootDir = VaporRunner.findVaporRoot()
-        self.engineDir = rootDir.appendingPathComponent("engines/default")
-        self.defaultBottleDir = rootDir.appendingPathComponent("bottles/Steam")
+        self.dataDir = VaporRunner.findDataDir(rootDir: rootDir)
+        self.engineDir = dataDir.appendingPathComponent("engines/default")
+        self.defaultBottleDir = dataDir.appendingPathComponent("bottles/Steam")
         self.steamExe = defaultBottleDir.appendingPathComponent("drive_c/Program Files (x86)/Steam/steam.exe")
         self.cs2Exe = defaultBottleDir.appendingPathComponent("drive_c/Program Files (x86)/Steam/steamapps/common/Counter-Strike Global Offensive/game/bin/win64/cs2.exe")
-        self.configFile = rootDir.appendingPathComponent("config.env")
+        self.configFile = dataDir.appendingPathComponent("config.env")
 
         refreshStatus()
+    }
+
+    static func findDataDir(rootDir: URL) -> URL {
+        let fm = FileManager.default
+        let home = fm.homeDirectoryForCurrentUser
+        let appSupport = home.appendingPathComponent("Library/Application Support/Vapor")
+
+        if fm.fileExists(atPath: rootDir.appendingPathComponent("engines").path) && fm.isWritableFile(atPath: rootDir.path) {
+            return rootDir
+        }
+
+        try? fm.createDirectory(at: appSupport, withIntermediateDirectories: true)
+        return appSupport
     }
 
     static func findVaporRoot() -> URL {
@@ -68,7 +83,7 @@ class VaporRunner: ObservableObject {
             return candidateDir
         }
 
-        // Fallback to ~/.vapor
+        // Fallback to bundle or dotVapor
         return dotVapor
     }
 

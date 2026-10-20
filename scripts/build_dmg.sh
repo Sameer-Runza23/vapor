@@ -25,7 +25,19 @@ mkdir -p "$APP_DIR/Contents/MacOS"
 mkdir -p "$APP_DIR/Contents/Resources"
 cp "$ROOT_DIR/gui/Vapor" "$APP_DIR/Contents/MacOS/Vapor"
 
-echo "[-] Staging files..."
+# Copy AppIcon.icns & Info.plist
+cp "$ROOT_DIR/assets/AppIcon.icns" "$APP_DIR/Contents/Resources/AppIcon.icns" 2>/dev/null || true
+
+# Bundle self-contained helper scripts into Resources/vapor
+RESOURCE_VAPOR="$APP_DIR/Contents/Resources/vapor"
+rm -rf "$RESOURCE_VAPOR"
+mkdir -p "$RESOURCE_VAPOR/bin" "$RESOURCE_VAPOR/scripts" "$RESOURCE_VAPOR/assets"
+cp -R "$ROOT_DIR/bin/" "$RESOURCE_VAPOR/bin/"
+cp -R "$ROOT_DIR/scripts/" "$RESOURCE_VAPOR/scripts/"
+cp -R "$ROOT_DIR/assets/" "$RESOURCE_VAPOR/assets/"
+chmod +x "$RESOURCE_VAPOR/bin/"* "$RESOURCE_VAPOR/scripts/"*.sh 2>/dev/null || true
+
+echo "[-] Staging files for DMG installer..."
 cp -R "$APP_DIR" "$BUILD_DIR/"
 ln -s /Applications "$BUILD_DIR/Applications"
 
